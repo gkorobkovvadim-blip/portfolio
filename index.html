@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Вадим Коробков · Ведущий</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #efece2;            /* тёплый кремовый — в тон фону фото */
+      --text: #1b1a17;
+      --muted: #77746c;
+      --card: #ffffff;
+      --line: rgba(0,0,0,.08);
+      --rose: #d98a82;          /* бледно-красная кнопка */
+      --dark: #1b1a17;
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      line-height: 1.5;
+      padding: 0 16px calc(110px + env(safe-area-inset-bottom));
+    }
+    .wrap { max-width: 480px; margin: 0 auto; }
+
+    /* ============ HERO ============ */
+    .hero {
+      position: relative;
+      margin-top: 16px;
+      border-radius: 26px;
+      overflow: hidden;
+      aspect-ratio: 4 / 5;
+      display: flex; align-items: flex-end;
+      background:
+        linear-gradient(180deg, transparent 40%, rgba(0,0,0,.15) 62%, rgba(0,0,0,.82) 100%),
+        url('photo.jpg') 40% 20% / cover no-repeat, #d9d4c6;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.35);
+    }
+    .hero-glass { position: relative; width: 100%; padding: 22px 20px 22px; }
+    .hero h1 {
+      font-size: 38px; line-height: .98; font-weight: 800;
+      margin: 0 0 8px; letter-spacing: -.5px; color: #fff;
+      text-shadow: 0 2px 20px rgba(0,0,0,.4);
+    }
+    .hero .sub { color: rgba(255,255,255,.9); font-size: 14.5px; margin: 0; text-shadow: 0 1px 12px rgba(0,0,0,.5); }
+
+    /* ============ TAGS ============ */
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 2px 4px; }
+    .tag {
+      font-size: 13px; font-weight: 500; color: var(--text);
+      padding: 8px 14px; border-radius: 999px;
+      background: var(--card); border: 1px solid var(--line);
+    }
+
+    /* ============ SECTION ============ */
+    .label {
+      font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--muted); margin: 26px 6px 14px;
+    }
+
+    /* ============ ПЛИТКА ФОРМАТОВ ============ */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tile {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 3 / 4;
+      display: flex; align-items: flex-end;
+      background-size: cover; background-position: center;
+      transition: transform .08s;
+    }
+    .tile:active { transform: scale(.98); }
+    .tile::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.72) 100%);
+    }
+    .tile .cap { position: relative; z-index: 1; padding: 14px 14px 16px; width: 100%; text-align: center; }
+    .tile h3 {
+      font-size: 13.5px; font-weight: 600; margin: 0; color: #fff;
+      line-height: 1.2; letter-spacing: .2px; text-wrap: balance;
+      text-shadow: 0 1px 10px rgba(0,0,0,.5);
+    }
+
+    /* ============ FIXED BAR ============ */
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+      display: flex; gap: 10px; max-width: 480px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(239,236,226,0), rgba(239,236,226,.96) 45%);
+    }
+    .action {
+      flex: 1; border: none; border-radius: 999px; padding: 15px 12px;
+      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      text-decoration: none; transition: transform .08s;
+    }
+    .action:active { transform: scale(.97); }
+    .action svg { width: 18px; height: 18px; flex: none; }
+    .action.primary { background: var(--rose); color: #fff; }
+    .action.secondary { background: var(--dark); color: #fff; }
+
+    /* галочка верификации */
+    .verified { display: inline-block; vertical-align: -5px; margin-left: 8px; }
+    .verified svg { width: 26px; height: 26px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-glass">
+        <h1>Вадим<br>Коробков<span class="verified"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5l2.35 1.7 2.9-.02 .9 2.75 2.35 1.72-.9 2.76.9 2.76-2.35 1.72-.9 2.75-2.9-.02L12 21.5l-2.35-1.7-2.9.02-.9-2.75-2.35-1.72.9-2.76-.9-2.76 2.35-1.72.9-2.75 2.9.02z" fill="#2AABEE"/><path d="M8.5 12.2l2.3 2.3 4.7-4.9" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></h1>
+        <p class="sub">Ведущий · частные и корпоративные мероприятия · Москва</p>
+      </div>
+    </section>
+
+    <div class="tags">
+      <span class="tag">Резидент TOP15MOSCOW</span>
+      <span class="tag">Спикер TEDx</span>
+      <span class="tag">Основатель Московского клуба сторителлинга</span>
+    </div>
+
+    <!-- ============ ФОРМАТЫ (ПЛИТКА) ============ -->
+    <div class="label">Форматы</div>
+    <div class="grid">
+
+      <div class="tile" style="background-image:url('fmt-corp.jpg')">
+        <div class="cap"><h3>Корпоративные мероприятия</h3></div>
+      </div>
+
+      <div class="tile" style="background-image:url('fmt-bday.jpg')">
+        <div class="cap"><h3>Дни рождения</h3></div>
+      </div>
+
+      <div class="tile" style="background-image:url('fmt-wedding.jpg')">
+        <div class="cap"><h3>Свадьбы</h3></div>
+      </div>
+
+      <div class="tile" style="background-image:url('fmt-story.jpg')">
+        <div class="cap"><h3>Московский клуб сторителлинга</h3></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ КНОПКИ ============ -->
+  <div class="bar">
+    <a class="action primary" id="contact" href="#">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.24 1.06-.87 1.32-1.76.82l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.79 13.4l-4.8-1.5c-1.04-.33-1.06-1.04.22-1.54l18.77-7.24c.87-.32 1.63.2 1.35 1.54z"/></svg>
+      Связаться
+    </a>
+    <a class="action secondary" id="rider" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      Скачать райдер
+    </a>
+  </div>
+
+  <script>
+    const CONFIG = {
+      contactUrl: "https://t.me/vadimkorobkov",
+      riderUrl: "Райдер_Вадим_Коробков.pdf"   // файл лежит рядом с index.html
+    };
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor("#efece2"); tg.setBackgroundColor("#efece2"); } catch(e){} }
+
+    document.getElementById("contact").addEventListener("click", (e) => {
+      e.preventDefault();
+      tg?.openTelegramLink ? tg.openTelegramLink(CONFIG.contactUrl) : window.open(CONFIG.contactUrl, "_blank");
+    });
+
+    document.getElementById("rider").addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = encodeURI(CONFIG.riderUrl);
+      tg?.openLink ? tg.openLink(url) : window.open(url, "_blank");
+    });
+  </script>
+</body>
+</html>
