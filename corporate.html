@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Корпоративные мероприятия · Вадим Коробков</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #efece2;
+      --text: #1b1a17;
+      --muted: #77746c;
+      --card: #ffffff;
+      --line: rgba(0,0,0,.08);
+      --rose: #d98a82;
+      --dark: #1b1a17;
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      color: var(--text); line-height: 1.5;
+      padding: 0 16px calc(28px + env(safe-area-inset-bottom));
+    }
+    .wrap { max-width: 480px; margin: 0 auto; }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative; margin-top: 16px; border-radius: 26px; overflow: hidden;
+      aspect-ratio: 4 / 5; display: flex; align-items: flex-end;
+      background:
+        linear-gradient(180deg, transparent 40%, rgba(0,0,0,.15) 62%, rgba(0,0,0,.82) 100%),
+        url('corp-hero.jpg') center / cover no-repeat, #d9d4c6;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.35);
+    }
+    .hero-glass { position: relative; width: 100%; padding: 22px 20px; }
+    .hero h1 { font-size: 34px; line-height: 1; font-weight: 800; margin: 0 0 8px; letter-spacing: -.5px; color: #fff; text-shadow: 0 2px 20px rgba(0,0,0,.4); }
+    .hero .sub { color: rgba(255,255,255,.9); font-size: 14.5px; margin: 0; text-shadow: 0 1px 12px rgba(0,0,0,.5); }
+
+    /* ===== SECTION ===== */
+    .label { font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin: 28px 6px 14px; }
+
+    /* ===== ABOUT ===== */
+    .about { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+    .about ul { margin: 0; padding: 0; list-style: none; }
+    .about li { font-size: 14.5px; padding: 9px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
+    .about li:last-child { border-bottom: none; }
+    .about li b { font-weight: 700; }
+    .about li .dot { color: var(--rose); flex: none; }
+
+    /* ===== VIDEO ===== */
+    .video {
+      position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 10;
+      display: flex; align-items: flex-end; cursor: pointer;
+      background: linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.6)), url('gallery-1.jpg') center / cover no-repeat, #2a2d34;
+    }
+    .video .play {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.92);
+      display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+    }
+    .video .play svg { width: 26px; height: 26px; fill: var(--dark); margin-left: 3px; }
+    .video .vcap { position: relative; z-index: 1; padding: 16px 18px; color: #fff; }
+    .video .vcap b { display: block; font-size: 17px; }
+    .video .vcap span { font-size: 12.5px; color: rgba(255,255,255,.8); }
+
+    /* ===== GALLERY ===== */
+    .gallery { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 6px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+    .gallery::-webkit-scrollbar { display: none; }
+    .shot {
+      flex: 0 0 auto; width: 220px; aspect-ratio: 3 / 4; border-radius: 18px;
+      background-size: cover; background-position: center; scroll-snap-align: start;
+      border: 1px solid var(--line); position: relative;
+      display: grid; place-items: center;
+    }
+    .shot.placeholder { background: #e4e0d5; }
+    .shot .num { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+    /* ===== CLIENTS (accordion) ===== */
+    .cli { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+    .cli-btn { width: 100%; background: none; border: none; color: var(--text); padding: 16px 18px; font-size: 15.5px; font-weight: 600; text-align: left; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+    .cli-btn .emoji { font-size: 18px; }
+    .cli-btn .chev { margin-left: auto; color: var(--muted); font-size: 18px; transition: transform .25s; }
+    .cli.open .chev { transform: rotate(90deg); }
+    .cli-list { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+    .cli-list ul { margin: 0; padding: 0 18px 16px 46px; list-style: none; }
+    .cli-list li { font-size: 14px; color: var(--muted); padding: 5px 0; }
+
+    /* ===== ACTIONS ===== */
+    .actions { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; }
+    .action { border: none; border-radius: 999px; padding: 16px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; text-decoration: none; transition: transform .08s; }
+    .action:active { transform: scale(.98); }
+    .action svg { width: 18px; height: 18px; flex: none; }
+    .action.rose { background: var(--rose); color: #fff; }
+    .action.dark { background: var(--dark); color: #fff; }
+    .action.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+      <div class="hero-glass">
+        <h1>Вадим Коробков</h1>
+        <p class="sub">Корпоративные мероприятия · презентации · форумы и др.</p>
+      </div>
+    </section>
+
+    <!-- ===== ОБО МНЕ ===== -->
+    <div class="label">Обо мне</div>
+    <div class="about">
+      <ul>
+        <li><span class="dot">▪️</span><span><b>16 лет</b> опыта</span></li>
+        <li><span class="dot">▪️</span><span>39 лет, Москва</span></li>
+        <li><span class="dot">▪️</span><span>Основатель Московского клуба сторителлинга</span></li>
+        <li><span class="dot">▪️</span><span>Резидент TOP15MOSCOW</span></li>
+        <li><span class="dot">▪️</span><span>Участник конференции TEDx</span></li>
+        <li><span class="dot">▪️</span><span>Преподаватель ВШЭ — курс «Проведение мероприятий» для актёров</span></li>
+        <li><span class="dot">▪️</span><span>Ведение — интеллигентное, с хорошим чувством юмора</span></li>
+      </ul>
+    </div>
+
+    <!-- ===== ВИДЕО ===== -->
+    <div class="label">Видео</div>
+    <div class="video" id="video">
+      <div class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="vcap"><b>Премия ТОП-100</b><span>Ведение церемонии награждения</span></div>
+    </div>
+
+    <!-- ===== ГАЛЕРЕЯ ===== -->
+    <div class="label">С мероприятий</div>
+    <div class="gallery" id="gallery"><!-- фото добавятся скриптом --></div>
+
+    <!-- ===== КЛИЕНТЫ ===== -->
+    <div class="label">Клиенты</div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🏦</span> Банки <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>Альфа-Банк</li><li>Газпромбанк</li><li>Совкомбанк</li><li>Сбербанк</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">💻</span> IT <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>Basis</li><li>Admitad</li><li>JTL</li><li>Netwell</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🛍️</span> Ритейл и e-commerce <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>X5 Group</li><li>Lamoda</li><li>Spasskiy</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🚆</span> Транспорт <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>РЖД</li><li>S7</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🏭</span> Промышленность и строительство <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>Мосметрострой</li><li>ГосНИИАС</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🚗</span> Авто <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>Ирбис — автосалон</li>
+      </ul></div>
+    </div>
+
+    <div class="cli">
+      <button class="cli-btn"><span class="emoji">🏥</span> Медицина <span class="chev">›</span></button>
+      <div class="cli-list"><ul>
+        <li>Евроонко</li>
+      </ul></div>
+    </div>
+
+    <!-- ===== КНОПКИ ===== -->
+    <div class="actions">
+      <a class="action rose" id="contact" href="#">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.24 1.06-.87 1.32-1.76.82l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.79 13.4l-4.8-1.5c-1.04-.33-1.06-1.04.22-1.54l18.77-7.24c.87-.32 1.63.2 1.35 1.54z"/></svg>
+        Связаться
+      </a>
+      <a class="action dark" id="presskit" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        Скачать пресс-кит
+      </a>
+      <a class="action ghost" id="media" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+        Взять фото и видео материалы
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    const CONFIG = {
+      contactUrl: "https://t.me/vadimkorobkov",
+      pressKitUrl: "PressKit_Vadim_Korobkov.pptx",
+      mediaUrl: "https://disk.yandex.ru/d/mPsdoYFd5_WiHg",
+      videoUrl: "https://kinescope.io/wezpF31TDCjVt6sD9zvwNZ"
+    };
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready(); tg.expand();
+      try { tg.setHeaderColor("#efece2"); tg.setBackgroundColor("#efece2"); } catch(e){}
+      // кнопка «назад» в шапке Telegram → на главную
+      if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(() => history.back()); }
+    }
+
+    // галерея: показываем только реально существующие фото (gallery-1.jpg, gallery-2.jpg …)
+    const g = document.getElementById("gallery");
+    const MAX_SHOTS = 12;
+    for (let i = 1; i <= MAX_SHOTS; i++) {
+      const d = document.createElement("div");
+      d.className = "shot";
+      d.style.display = "none";      // скрыт, пока не подтвердится, что фото есть
+      g.appendChild(d);
+      const img = new Image();
+      img.onload = () => { d.style.backgroundImage = `url('gallery-${i}.jpg')`; d.style.display = ""; };
+      img.onerror = () => { d.remove(); };
+      img.src = `gallery-${i}.jpg`;
+    }
+
+    // аккордеон клиентов
+    document.querySelectorAll(".cli-btn").forEach((btn) => {
+      const card = btn.closest(".cli");
+      const list = btn.nextElementSibling;
+      btn.addEventListener("click", () => {
+        const open = card.classList.contains("open");
+        document.querySelectorAll(".cli").forEach((c) => {
+          c.classList.remove("open");
+          c.querySelector(".cli-list").style.maxHeight = null;
+        });
+        if (!open) { card.classList.add("open"); list.style.maxHeight = list.scrollHeight + "px"; }
+        tg?.HapticFeedback?.selectionChanged();
+      });
+    });
+
+    function open(url) { tg?.openLink ? tg.openLink(url) : window.open(url, "_blank"); }
+
+    document.getElementById("contact").addEventListener("click", (e) => {
+      e.preventDefault();
+      tg?.openTelegramLink ? tg.openTelegramLink(CONFIG.contactUrl) : window.open(CONFIG.contactUrl, "_blank");
+    });
+    document.getElementById("presskit").addEventListener("click", (e) => { e.preventDefault(); open(encodeURI(CONFIG.pressKitUrl)); });
+    document.getElementById("media").addEventListener("click", (e) => {
+      e.preventDefault();
+      CONFIG.mediaUrl ? open(CONFIG.mediaUrl) : (tg?.showAlert || alert)("Ссылка на медиаматериалы ещё не добавлена.");
+    });
+    document.getElementById("video").addEventListener("click", () => {
+      CONFIG.videoUrl ? open(CONFIG.videoUrl) : (tg?.showAlert || alert)("Ссылка на видео ещё не добавлена.");
+    });
+  </script>
+</body>
+</html>

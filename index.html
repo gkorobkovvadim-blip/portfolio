@@ -129,21 +129,21 @@
     <div class="label">Форматы</div>
     <div class="grid">
 
-      <div class="tile" style="background-image:url('fmt-corp.jpg')">
+      <a class="tile" href="corporate.html" style="background-image:url('fmt-corp.jpg')">
         <div class="cap"><h3>Корпоративные мероприятия</h3></div>
-      </div>
+      </a>
 
-      <div class="tile" style="background-image:url('fmt-bday.jpg')">
+      <a class="tile" href="bday.html" style="background-image:url('fmt-bday.jpg')">
         <div class="cap"><h3>Дни рождения</h3></div>
-      </div>
+      </a>
 
-      <div class="tile" style="background-image:url('fmt-wedding.jpg')">
+      <a class="tile" href="wedding.html" style="background-image:url('fmt-wedding.jpg')">
         <div class="cap"><h3>Свадьбы</h3></div>
-      </div>
+      </a>
 
-      <div class="tile" style="background-image:url('fmt-story.jpg')">
+      <a class="tile" id="story-tile" href="https://mcstorytelling.ru/" style="background-image:url('fmt-story.jpg')">
         <div class="cap"><h3>Московский клуб сторителлинга</h3></div>
-      </div>
+      </a>
 
     </div>
   </div>
@@ -177,6 +177,13 @@
     document.getElementById("rider").addEventListener("click", (e) => {
       e.preventDefault();
       const url = encodeURI(CONFIG.riderUrl);
+      tg?.openLink ? tg.openLink(url) : window.open(url, "_blank");
+    });
+
+    // плитка «Московский клуб сторителлинга» → внешний сайт
+    document.getElementById("story-tile").addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = "https://mcstorytelling.ru/";
       tg?.openLink ? tg.openLink(url) : window.open(url, "_blank");
     });
   </script>
