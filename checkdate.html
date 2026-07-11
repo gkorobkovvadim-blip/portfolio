@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Проверить дату · Вадим Коробков</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #efece2; --text: #1b1a17; --muted: #77746c; --card: #ffffff;
+      --line: rgba(0,0,0,.08); --rose: #d98a82; --dark: #1b1a17; --radius: 22px;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      color: var(--text); line-height: 1.5;
+      padding: 0 16px calc(110px + env(safe-area-inset-bottom));
+    }
+    .wrap { max-width: 480px; margin: 0 auto; }
+    h1 { font-size: 26px; font-weight: 800; margin: 22px 2px 2px; letter-spacing: -.4px; }
+    .lead { color: var(--muted); font-size: 14px; margin: 0 2px 20px; }
+
+    .cal { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+    .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .cal-head .m { font-size: 17px; font-weight: 700; text-transform: capitalize; }
+    .nav { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: #faf9f5; display: grid; place-items: center; cursor: pointer; font-size: 18px; color: var(--text); user-select: none; }
+    .nav.off { opacity: .3; pointer-events: none; }
+    .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .wd { text-align: center; font-size: 11.5px; color: var(--muted); font-weight: 600; padding: 4px 0 8px; text-transform: uppercase; }
+    .day { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; font-size: 15px; cursor: pointer; transition: background .12s; }
+    .day.empty { pointer-events: none; }
+    .day.past { color: #c3bfb2; pointer-events: none; }
+    .day.today { box-shadow: inset 0 0 0 1.5px var(--rose); font-weight: 700; }
+    .day.sel { background: var(--rose); color: #fff; font-weight: 700; }
+    .day:not(.past):not(.empty):active { background: #f0e7e2; }
+
+    .bar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+      padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+      max-width: 480px; margin: 0 auto;
+      background: linear-gradient(180deg, rgba(239,236,226,0), rgba(239,236,226,.96) 45%);
+    }
+    .btn {
+      width: 100%; border: none; border-radius: 999px; padding: 16px; font-size: 15.5px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px;
+      background: var(--rose); color: #fff; transition: transform .08s, opacity .15s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:disabled { opacity: .45; pointer-events: none; }
+    .btn svg { width: 19px; height: 19px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Проверить дату</h1>
+    <p class="lead">Выберите дату мероприятия — открою чат, и вы спросите, свободен ли я в этот день.</p>
+
+    <div class="cal">
+      <div class="cal-head">
+        <span class="nav" id="prev">‹</span>
+        <span class="m" id="month"></span>
+        <span class="nav" id="next">›</span>
+      </div>
+      <div class="grid" id="wdrow"></div>
+      <div class="grid" id="days"></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="ask" disabled>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3 18.7 19.4c-.24 1.06-.87 1.32-1.76.82l-4.87-3.59-2.35 2.26c-.26.26-.48.48-.98.48l.35-4.96 9.03-8.16c.39-.35-.09-.55-.61-.2L6.79 13.4l-4.8-1.5c-1.04-.33-1.06-1.04.22-1.54l18.77-7.24c.87-.32 1.63.2 1.35 1.54z"/></svg>
+      <span id="askLabel">Выберите дату</span>
+    </button>
+  </div>
+
+  <script>
+    const CONTACT = "vadimkorobkov"; // личный аккаунт Вадима (без @)
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready(); tg.expand();
+      try { tg.setHeaderColor("#efece2"); tg.setBackgroundColor("#efece2"); } catch(e){}
+      if (tg.BackButton) { tg.BackButton.show(); tg.BackButton.onClick(() => history.back()); }
+    }
+    const $ = (id) => document.getElementById(id);
+
+    const MONTHS = ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+    const WD = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const view = new Date(today.getFullYear(), today.getMonth(), 1);
+    let selected = null;
+
+    // строка дней недели
+    $("wdrow").innerHTML = WD.map((d) => `<div class="wd">${d}</div>`).join("");
+
+    function sameDay(a, b) { return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+    function render() {
+      $("month").textContent = MONTHS[view.getMonth()] + " " + view.getFullYear();
+      // нельзя листать в прошлое дальше текущего месяца
+      const atCurrent = view.getFullYear()===today.getFullYear() && view.getMonth()===today.getMonth();
+      $("prev").classList.toggle("off", atCurrent);
+
+      const first = new Date(view.getFullYear(), view.getMonth(), 1);
+      const startOffset = (first.getDay() + 6) % 7; // понедельник = 0
+      const daysInMonth = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+
+      let html = "";
+      for (let i = 0; i < startOffset; i++) html += `<div class="day empty"></div>`;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(view.getFullYear(), view.getMonth(), d);
+        const cls = ["day"];
+        if (date < today) cls.push("past");
+        if (sameDay(date, today)) cls.push("today");
+        if (sameDay(date, selected)) cls.push("sel");
+        html += `<div class="${cls.join(" ")}" data-d="${d}">${d}</div>`;
+      }
+      $("days").innerHTML = html;
+    }
+
+    $("days").addEventListener("click", (e) => {
+      const cell = e.target.closest(".day");
+      if (!cell || cell.classList.contains("past") || cell.classList.contains("empty")) return;
+      selected = new Date(view.getFullYear(), view.getMonth(), +cell.dataset.d);
+      render();
+      const label = `${pad(selected.getDate())}.${pad(selected.getMonth()+1)}.${selected.getFullYear()}`;
+      $("askLabel").textContent = "Спросить про " + label;
+      $("ask").disabled = false;
+      tg?.HapticFeedback?.selectionChanged();
+    });
+
+    $("prev").addEventListener("click", () => { view.setMonth(view.getMonth()-1); render(); });
+    $("next").addEventListener("click", () => { view.setMonth(view.getMonth()+1); render(); });
+
+    $("ask").addEventListener("click", () => {
+      if (!selected) return;
+      const label = `${pad(selected.getDate())}.${pad(selected.getMonth()+1)}.${selected.getFullYear()}`;
+      const msg = `Привет! У тебя свободна дата ${label}?`;
+      const url = `https://t.me/${CONTACT}?text=${encodeURIComponent(msg)}`;
+      tg?.openTelegramLink ? tg.openTelegramLink(url) : window.open(url, "_blank");
+    });
+
+    render();
+  </script>
+</body>
+</html>
