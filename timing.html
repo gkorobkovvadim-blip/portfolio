@@ -99,7 +99,6 @@
 
     <button class="btn ghost" id="addRow">＋ Добавить блок</button>
     <button class="btn rose" id="send">📨 Прислать в Telegram</button>
-    <button class="btn dark" id="download">⬇️ Скачать Excel</button>
   </div>
 
   <script>
@@ -268,20 +267,10 @@
       return btoa(bin);
     }
 
-    $("download").addEventListener("click", async () => {
-      if (typeof ExcelJS === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
-      const buf = await buildXlsxBuffer();
-      const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = FILENAME;
-      document.body.appendChild(a); a.click(); a.remove();
-      tg?.HapticFeedback?.impactOccurred("medium");
-    });
-
     $("send").addEventListener("click", async () => {
       if (typeof ExcelJS === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
       const initData = tg?.initData;
-      if (!initData) { alertMsg("Отправка в чат работает только внутри Telegram. Здесь можно нажать «Скачать Excel»."); return; }
+      if (!initData) { alertMsg("Откройте генератор внутри Telegram — файл придёт вам в чат с ботом."); return; }
       const btn = $("send"), label = btn.textContent;
       btn.textContent = "Отправляю…"; btn.style.pointerEvents = "none";
       try {
