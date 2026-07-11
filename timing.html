@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Генератор тайминга · Вадим Коробков</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <style>
     :root {
       --bg: #efece2; --text: #1b1a17; --muted: #77746c; --card: #ffffff;
@@ -31,6 +31,10 @@
       font: inherit; font-size: 15px; border: 1px solid var(--line); border-radius: 12px;
       padding: 9px 10px; background: #faf9f5; color: var(--text); width: 104px; text-align: center;
     }
+    .field { padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .field:last-child { border-bottom: none; }
+    .field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .field input { width: 100%; font: inherit; font-size: 15px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #faf9f5; color: var(--text); }
     .switch { position: relative; width: 46px; height: 28px; flex: none; }
     .switch { cursor: pointer; }
     .slider { position: absolute; inset: 0; background: #d8d4c8; border-radius: 999px; transition: .2s; }
@@ -64,6 +68,13 @@
   <div class="wrap">
     <h1>Генератор тайминга</h1>
     <p class="lead">Всё редактируется прямо в таблице: минуты, названия блоков, подача блюд. Время пересчитывается автоматически.</p>
+
+    <div class="label">Шапка файла</div>
+    <div class="controls">
+      <div class="field"><label>Событие и имена</label><input type="text" id="evtTitle" placeholder="Свадьба · Иван и Мария"></div>
+      <div class="field"><label>Дата мероприятия</label><input type="date" id="evtDate"></div>
+      <div class="field"><label>Место проведения</label><input type="text" id="evtVenue" placeholder="Ресторан «Название»"></div>
+    </div>
 
     <div class="label">Начало и церемония</div>
     <div class="controls">
@@ -180,33 +191,101 @@
       recompute();
     });
 
-    // ---- Excel ----
+    // ---- Excel (ExcelJS: шапка, рамки, заливка) ----
     const SEND_URL = "https://morning-tooth-d6e3vadim-bot.gkorobkov-vadim.workers.dev/send";
     const FILENAME = "Тайминг мероприятия.xlsx";
-    function buildWorkbook() {
-      const data = [["Время", "Мин", "Блок / событие", "Подача блюд / примечание"]];
-      tbody.querySelectorAll("tr").forEach((tr) => {
-        data.push([tr.querySelector(".tm").textContent, tr.querySelector(".min").textContent, tr.querySelector(".ev").textContent, tr.querySelector(".note").textContent].map((s) => s.trim()));
+
+    const fmtDate = (v) => { if (!v) return ""; const [y, m, d] = v.split("-"); return `${d}.${m}.${y}`; };
+
+    async function buildXlsxBuffer() {
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Тайминг", { views: [{ showGridLines: false }] });
+      ws.columns = [{ width: 10 }, { width: 7 }, { width: 38 }, { width: 38 }];
+
+      const thin = { style: "thin", color: { argb: "FFCFC9BC" } };
+      const border = { top: thin, left: thin, bottom: thin, right: thin };
+
+      // Шапка: название
+      ws.mergeCells("A1:D1");
+      const tc = ws.getCell("A1");
+      tc.value = ($("evtTitle").value.trim()) || "Тайминг мероприятия";
+      tc.font = { bold: true, size: 16, color: { argb: "FF1B1A17" } };
+      tc.alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(1).height = 30;
+
+      // Шапка: дата · место
+      const sub = [];
+      const d = fmtDate($("evtDate").value); if (d) sub.push(d);
+      const v = $("evtVenue").value.trim(); if (v) sub.push(v);
+      ws.mergeCells("A2:D2");
+      const sc = ws.getCell("A2");
+      sc.value = sub.join("      ·      ");
+      sc.font = { size: 11, italic: true, color: { argb: "FF77746C" } };
+      sc.alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(2).height = 18;
+      ws.getRow(3).height = 6; // отступ
+
+      // Заголовок таблицы
+      const hr = ws.getRow(4);
+      hr.values = ["Время", "Мин", "Блок / событие", "Подача блюд / примечание"];
+      hr.height = 22;
+      hr.eachCell((c) => {
+        c.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD98A82" } };
+        c.alignment = { vertical: "middle" };
+        c.border = border;
       });
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      ws["!cols"] = [{ wch: 8 }, { wch: 6 }, { wch: 30 }, { wch: 32 }];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Тайминг");
-      return wb;
+
+      // Строки тайминга
+      let i = 0;
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        const tm = tr.querySelector(".tm").textContent.trim();
+        const min = tr.querySelector(".min").textContent.trim();
+        const ev = tr.querySelector(".ev").textContent.trim();
+        const note = tr.querySelector(".note").textContent.trim();
+        const isPause = /музыкальн|пауза|кавер|dj/i.test(ev + " " + note);
+        const isKey = /велком|церемони|торт|конец/i.test(ev);
+        const row = ws.getRow(5 + i);
+        row.values = [tm, min === "" ? "" : (Number(min) || min), ev, note];
+        row.height = 20;
+        row.eachCell({ includeEmpty: true }, (c, col) => {
+          c.border = border;
+          c.alignment = { vertical: "middle", wrapText: true, horizontal: col === 2 ? "center" : "left" };
+          const base = isPause ? { italic: true, color: { argb: "FF8A8478" }, size: 11 } : { color: { argb: "FF1B1A17" }, size: 11 };
+          c.font = { ...base, bold: (col === 1 && !isPause) || (col === 3 && isKey) };
+          if (isPause) c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F0E7" } };
+        });
+        i++;
+      });
+
+      return wb.xlsx.writeBuffer(); // ArrayBuffer
     }
-    $("download").addEventListener("click", () => {
-      if (typeof XLSX === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
-      XLSX.writeFile(buildWorkbook(), FILENAME);
+
+    function bufToBase64(buf) {
+      const bytes = new Uint8Array(buf);
+      let bin = "";
+      for (let j = 0; j < bytes.length; j++) bin += String.fromCharCode(bytes[j]);
+      return btoa(bin);
+    }
+
+    $("download").addEventListener("click", async () => {
+      if (typeof ExcelJS === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
+      const buf = await buildXlsxBuffer();
+      const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = FILENAME;
+      document.body.appendChild(a); a.click(); a.remove();
       tg?.HapticFeedback?.impactOccurred("medium");
     });
+
     $("send").addEventListener("click", async () => {
-      if (typeof XLSX === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
+      if (typeof ExcelJS === "undefined") { alertMsg("Не удалось загрузить модуль Excel. Проверьте интернет."); return; }
       const initData = tg?.initData;
       if (!initData) { alertMsg("Отправка в чат работает только внутри Telegram. Здесь можно нажать «Скачать Excel»."); return; }
       const btn = $("send"), label = btn.textContent;
       btn.textContent = "Отправляю…"; btn.style.pointerEvents = "none";
       try {
-        const fileB64 = XLSX.write(buildWorkbook(), { type: "base64", bookType: "xlsx" });
+        const fileB64 = bufToBase64(await buildXlsxBuffer());
         const r = await fetch(SEND_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData, fileB64, filename: FILENAME, caption: "Ваш тайминг мероприятия 📋" }) });
         const res = await r.json();
         if (res.ok) { tg?.HapticFeedback?.notificationOccurred("success"); alertMsg("Готово! Файл отправлен вам в чат с ботом 📋"); }
