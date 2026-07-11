@@ -71,7 +71,7 @@
       aspect-ratio: 3 / 4;
       display: flex; align-items: flex-end;
       background-size: cover; background-position: center;
-      transition: transform .08s;
+      transition: transform .08s; text-decoration: none;
     }
     .tile:active { transform: scale(.98); }
     .tile::after {
@@ -84,6 +84,23 @@
       line-height: 1.2; letter-spacing: .2px; text-wrap: balance;
       text-shadow: 0 1px 10px rgba(0,0,0,.5);
     }
+
+    /* ============ ИНСТРУМЕНТЫ ============ */
+    .toolcard {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 16px 18px; text-decoration: none;
+      color: var(--text); transition: transform .08s;
+    }
+    .toolcard:active { transform: scale(.99); }
+    .toolcard .tool-ic {
+      width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+      font-size: 22px; background: #f3f0e7; border: 1px solid var(--line); border-radius: 13px;
+    }
+    .toolcard .tool-txt { display: flex; flex-direction: column; }
+    .toolcard .tool-txt b { font-size: 15.5px; font-weight: 700; }
+    .toolcard .tool-txt span { font-size: 12.5px; color: var(--muted); }
+    .toolcard .tool-chev { margin-left: auto; color: var(--muted); font-size: 20px; }
 
     /* ============ FIXED BAR ============ */
     .bar {
@@ -146,6 +163,14 @@
       </a>
 
     </div>
+
+    <!-- ============ ИНСТРУМЕНТЫ ============ -->
+    <div class="label">Инструменты</div>
+    <a class="toolcard" href="timing.html">
+      <span class="tool-ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1b1a17" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <span class="tool-txt"><b>Генератор тайминга</b><span>Собрать тайминг вечера и скачать в Excel</span></span>
+      <span class="tool-chev">›</span>
+    </a>
   </div>
 
   <!-- ============ КНОПКИ ============ -->
